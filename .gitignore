@@ -26,6 +26,8 @@ class GameSprite(sprite.Sprite):
 
 class Player(GameSprite):
     prev_shot = millis()
+    rel_flag = False
+    num_fire = 0
     def update(self):
         keys = key.get_pressed()
         if keys[K_LEFT] and self.rect.x > 5:
@@ -35,6 +37,11 @@ class Player(GameSprite):
         if keys[K_SPACE]:
             self.fire() 
     def fire(self):
+        if self.rel_flag and millis() - self.prev_shot < 3:
+            return
+        if self.rel_flag and millis() - self.prev_shot > 3:
+            self.rel_flag = False
+            self.num_fire = 0
         if millis() - self.prev_shot > 0.2:
             fire_sound.play()
             x = self.rect.centerx
@@ -42,6 +49,11 @@ class Player(GameSprite):
             bullet = Bullet('bullet.png', x, y, 10, 10, 20)
             bullet.rect.x -= bullet.rect.width // 2
             bullets.add(bullet)
+            self.prev_shot = millis()
+            self.num_fire += 1
+            if self.num_fire >= 5:
+                self.rel_flag = True
+
         
 class Enemy(GameSprite):
     def update(self):
@@ -58,6 +70,15 @@ class Bullet(GameSprite):
         if self.rect.y < self.rect.height:
             self.kill()
 
+class Obstacle(GameSprite):
+    def update(self):
+        self.rect.y += self.speed
+        if self.rect.y > height:
+            self.rect.y = -100
+            self.rect.x = random.randint(0, width - self.rect.width)
+            self.speed = random.randint(1, 5)
+
+
 font.init()
 font = font.Font(None, 40)
 
@@ -67,6 +88,13 @@ for i in range(5):
     speed = random.randint(2, 5)
     monster = Enemy('asteroid.png', x, -100, speed) 
     monsters.add(monster)
+
+obstacles = sprite.Group()
+for i in range(3):
+    x = random.randint(0, width - 80)
+    speed = random.randint(1, 5)
+    obstacle = Obstacle('ufo.png', x, -100, speed)
+    obstacles.add(obstacle)
 
 
 rocket = Player('rocket.png', 350, 430, 8)
@@ -115,6 +143,7 @@ while run:
 
     if not finish:
         window.blit(background,(0, 0))
+
         lost_text = font.render(
             'Пропущено: ' + str(lost), True, (255,69,0)
         )
@@ -122,6 +151,13 @@ while run:
         score_text = font.render(
             'Счёт: ' + str(score), True, (0,250,154)
         )  
+
+        if len(sprite.spritecollide(rocket, obstacles, True)):
+            x = random.randint(0, width - 80)
+            speed = random.randint(1, 5)
+            obstacle = Obstacle('ufo.png', x, -100, speed)
+            obstacles.add(obstacle)
+
         window.blit(score_text, (10, 10))
         window.blit(lost_text, (10, 50))
         rocket.update()
@@ -130,10 +166,11 @@ while run:
         monsters.draw(window)
         bullets.update()
         bullets.draw(window)
+        obstacles.update()
+        obstacles.draw(window)
         if lost >= 5 or gets:
             result = lose
             finish = True
-        #if score == 10:
         if score >= 50:
             result = win
             finish = True
