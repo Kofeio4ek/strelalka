@@ -10,7 +10,6 @@ display.set_caption('шутер')
 clock = time.Clock()
 FPS = 60
 
-
 class GameSprite(sprite.Sprite):
     def __init__(self, player_image, player_x, player_y, player_speed, width = 65, height = 65):
         super().__init__()
@@ -22,7 +21,6 @@ class GameSprite(sprite.Sprite):
     
     def reset(self):
         window.blit(self.image, (self.rect.x, self.rect.y)) 
-
 
 class Player(GameSprite):
     prev_shot = millis()
@@ -54,13 +52,12 @@ class Player(GameSprite):
             if self.num_fire >= 5:
                 self.rel_flag = True
 
-        
 class Enemy(GameSprite):
     def update(self):
         global lost
         self.rect.y += self.speed
         if self.rect.y > height:
-            self.rect.y = -100
+            self.rect.y = random.randint(2, 5)
             self.rect.x = random.randint(0, width - self.rect.width)
             lost += 1
             
@@ -77,7 +74,6 @@ class Obstacle(GameSprite):
             self.rect.y = -100
             self.rect.x = random.randint(0, width - self.rect.width)
             self.speed = random.randint(1, 5)
-
 
 font.init()
 font = font.Font(None, 40)
@@ -96,15 +92,11 @@ for i in range(3):
     obstacle = Obstacle('ufo.png', x, -100, speed)
     obstacles.add(obstacle)
 
-
 rocket = Player('rocket.png', 350, 430, 8)
-
-
 background = transform.scale(image.load('galaxy.jpg'), (700, 500))
 player = Player('rocket.png', (width - 65) // 2, height - 70,10)
 bullets = sprite.Group()
  
-
 finish = False
 run = True
 lost = 0   
@@ -117,7 +109,6 @@ win = font.render(
 lose = font.render(
     'YOU LOSE', True, (255, 0, 0)
 )
-
 
 mixer.init()
 mixer.music.load('space.ogg')
@@ -171,7 +162,7 @@ while run:
         if lost >= 5 or gets:
             result = lose
             finish = True
-        if score >= 50:
+        if score >= 10:
             result = win
             finish = True
         last_time = millis()
